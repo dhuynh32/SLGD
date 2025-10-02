@@ -1,0 +1,202 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Set Up Project Environment and Dependencies",
+        "description": "Create a virtual environment, install the Python packages listed in requirements.txt, and set up environment variable handling for API keys.",
+        "details": "Based on the existing `requirements.txt`, create a local Python virtual environment (e.g., using `venv`). Activate the environment and run `pip install -r requirements.txt`. Create a `.env` file to store the `OPENAI_API_KEY` and modify `main.py` to load it using `python-dotenv`. This is a prerequisite for using `langchain_openai`.",
+        "testStrategy": "Verify that all packages are installed by running `pip freeze`. Confirm that `main.py` can successfully load the API key from the `.env` file without errors.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Define the Graph State",
+        "description": "Define the data structure that will represent the state of the graph. This state will be passed between nodes.",
+        "details": "In `main.py`, define a `TypedDict` named `GraphState`. It should contain a key for `messages` which will be a list of `BaseMessage` objects. This structure is fundamental to how LangGraph manages information flow and agent memory.",
+        "testStrategy": "Instantiate the `GraphState` with a sample message list to ensure it is defined correctly and does not raise any syntax or type errors.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Implement the First Agent Node",
+        "description": "Create a function that will act as the first agent (node) in the graph, for example, a 'Researcher' agent.",
+        "details": "Create a Python function, e.g., `research_agent`, that accepts the `GraphState` as input. This function should append a new message to the state's message list, simulating the agent's work. For this MVP, it can be a hardcoded response like 'The researcher found data on topic X.' The function should return a dictionary with the updated `messages` list.",
+        "testStrategy": "Call the function with a sample `GraphState` and assert that the returned state contains the new message appended by the agent.",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Implement the Second Agent Node",
+        "description": "Create a function for the second agent, for example, a 'Chart Generator' agent.",
+        "details": "Similar to the first agent, create another function, e.g., `chart_generator_agent`. It should also accept the `GraphState`, append a message indicating its action (e.g., 'The chart generator created a chart based on the data.'), and return the updated state.",
+        "testStrategy": "Call the function with a sample `GraphState` (ideally one that includes a message from the first agent) and verify the new message is correctly appended.",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Create the Conditional Routing Logic",
+        "description": "Implement the function that will decide which agent to route the task to next.",
+        "details": "Create a function, e.g., `router_function`, that takes the `GraphState` as input. This function will inspect the last message in the `messages` list. Based on the content or sender of the message, it should return a string indicating the name of the next node to execute (e.g., 'researcher', 'chart_generator', or '__end__'). For the MVP, it can route from the researcher to the chart generator, and from the chart generator to the end.",
+        "testStrategy": "Test the function with different `GraphState` scenarios. For a state where the last message is from the researcher, assert it returns 'chart_generator'. For a state where the last message is from the chart generator, assert it returns '__end__'.",
+        "priority": "high",
+        "dependencies": [
+          3,
+          4
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Construct the LangGraph with Nodes and Entry Point",
+        "description": "Instantiate the `StateGraph` and add the defined agent functions as nodes.",
+        "details": "In `main.py`, create an instance of `langgraph.graph.StateGraph` using the `GraphState` definition. Use the `add_node` method to add the `research_agent` and `chart_generator_agent` functions as nodes, giving them string names like 'researcher' and 'chart_generator'. Set the entry point of the graph to the 'researcher' node using `set_entry_point`.",
+        "testStrategy": "The code should execute without errors. The graph object should be successfully created. No functional test is possible until the graph is compiled.",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          4
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Add Edges to the Graph and Compile",
+        "description": "Connect the nodes using conditional and standard edges, then compile the graph into a runnable object.",
+        "details": "Use the `add_conditional_edges` method to connect the 'researcher' node to the `router_function`. The mapping dictionary for this method should specify which node to go to based on the router's output string (e.g., 'chart_generator' maps to the 'chart_generator' node). Add a standard edge from 'chart_generator' to the `END` node. Finally, call the `.compile()` method on the graph object.",
+        "testStrategy": "The `.compile()` method should execute without raising errors about missing nodes or invalid edge definitions. The result should be a `CompiledGraph` instance.",
+        "priority": "medium",
+        "dependencies": [
+          5,
+          6
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Implement Main Execution Block to Run the Graph",
+        "description": "Invoke the compiled graph with an initial input and stream the results to the console.",
+        "details": "In the `if __name__ == '__main__':` block of `main.py`, define an initial input payload (e.g., a dictionary with a starting message). Use the `.stream()` method on the compiled graph, passing the input. Iterate through the output stream and print each step to the console to demonstrate the multi-agent flow.",
+        "testStrategy": "Run `python main.py`. The console output should clearly show the execution flowing from the researcher to the chart generator and then ending, with the state being printed at each step.",
+        "priority": "high",
+        "dependencies": [
+          7
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Enhance Logging and Console Output",
+        "description": "Improve the print statements within agent nodes and the main execution loop for better clarity.",
+        "details": "Refactor the agent functions and the main execution loop. Instead of just printing the raw state, add formatted log messages like '--- EXECUTING NODE: [node_name] ---', '--- CURRENT STATE ---', and '--- ROUTING DECISION: [next_node] ---'. This will make the command-line output much easier to follow for a user learning about the process.",
+        "testStrategy": "Run `python main.py` again. The output should be structured and clearly delineate each step of the graph's execution, matching the enhanced logging format.",
+        "priority": "low",
+        "dependencies": [
+          8
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Update README.md with Usage Instructions",
+        "description": "Update the README.md file to reflect the final implementation and provide clear instructions on how to run the demo.",
+        "details": "Edit the `README.md` file. Add a section explaining the agent workflow (e.g., Researcher -> Chart Generator). Update the 'Usage' section to include creating a `.env` file for the API key. Add a section with a sample of the expected output to show the user what to look for.",
+        "testStrategy": "A team member should be able to follow the instructions in the README.md from scratch (clone repo, create venv, create .env, install, run) and successfully execute the demo, observing the expected output.",
+        "priority": "medium",
+        "dependencies": [
+          8
+        ],
+        "status": "done",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-10-02T03:47:31.969Z",
+      "updated": "2025-10-02T04:35:50.936Z",
+      "description": "Tasks for master context"
+    }
+  },
+  "test-plan": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Unit Test for Research Agent with Mocked Tavily Tool",
+        "description": "Create a unit test for the research_agent, mocking the TavilySearchResults tool to ensure it correctly processes input and generates a structured ToolMessage.",
+        "details": "This task involves creating a robust unit test for the `research_agent` using `pytest`. The primary goal is to isolate the agent's logic from the external `TavilySearchResults` tool by mocking its API call.\n\n**Technical Approach:**\n1.  **Frameworks:** Use `pytest` as the test runner, `pytest-asyncio` to handle the asynchronous nature of the agent, and Python's built-in `unittest.mock.patch` or the `pytest-mock` plugin's `mocker` fixture.\n2.  **Mocking Strategy:**\n    *   Identify the exact function or method to mock. This is likely the `.invoke()` or `.ainvoke()` method of the `TavilySearchResults` instance used by the agent.\n    *   The mock should be configured to return a predefined, static JSON string that mimics a real, successful response from the Tavily API. Example: `'[{\"url\": \"https://example.com\", \"content\": \"Mocked search result content.\"}]'`. This ensures the test is deterministic and repeatable.\n3.  **Test Implementation:**\n    *   Create a new test file, e.g., `tests/unit/test_research_agent.py`.\n    *   Define an `async` test function decorated with `@pytest.mark.asyncio`.\n    *   Inside the test, use a `patch` context manager or the `mocker` fixture to replace the Tavily tool's method.\n    *   Construct a sample input for the agent that is known to trigger the research tool.\n    *   Invoke the agent's main execution function (e.g., `research_agent.ainvoke(input)`).\n    *   Capture the final state or message history returned by the agent.\n4.  **Assertions:**\n    *   Assert that the mocked Tavily method was called exactly once (`mock_tool.assert_called_once()`).\n    *   Assert that the agent's final output contains a `langchain_core.messages.ToolMessage`.\n    *   Verify the `content` of the `ToolMessage` matches the predefined mock response exactly.\n    *   Verify that the `tool_call_id` on the `ToolMessage` correctly corresponds to the `tool_call` generated by the model in a preceding step.",
+        "testStrategy": "1.  Navigate to the project's test directory and locate the newly created test file for the research agent.\n2.  Review the test code to confirm that it uses a mocking mechanism (e.g., `@patch` or a `mocker` fixture) to simulate the `TavilySearchResults` tool and does not make any real network requests.\n3.  Execute the entire test suite using the `pytest` command from the project's root directory.\n4.  Confirm that the new test case passes successfully in the test report.\n5.  To ensure the assertions are effective, temporarily modify an assertion in the new test to check for an incorrect value (e.g., change the expected content of the `ToolMessage`).\n6.  Run the test again and verify that it now fails as expected.\n7.  Revert the change made in the previous step.\n8.  If test coverage is configured, generate a coverage report and verify that the new test has increased code coverage for the `research_agent` module.",
+        "status": "done",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Unit Test for Chart Generator Agent",
+        "description": "Create a unit test for the chart_generator_agent to verify it correctly processes an input state from the research agent and appends a new HumanMessage confirming chart generation.",
+        "details": "This task involves creating a unit test for the `chart_generator_agent` using `pytest`. The test will ensure the agent correctly modifies the application state after receiving data, simulating the handoff from the `research_agent`.\n\n**Technical Approach:**\n1.  **Frameworks:** Utilize `pytest` for the test structure and `pytest-asyncio` to manage the asynchronous execution of the agent.\n2.  **Test Fixture for Input State:** Create a `pytest` fixture to generate a mock state dictionary. This dictionary will simulate the output of the `research_agent`, containing a `messages` list with a `ToolMessage` as the last item. The `ToolMessage` should contain sample data that the chart generator would typically process.\n3.  **Agent Invocation:** The test function will accept the mock state fixture as an argument. It will then invoke the `chart_generator_agent` with this state.\n4.  **Assertions:** After the agent runs, the test must perform the following assertions on the returned state:\n    *   Verify that the `messages` list in the output state has increased in length by exactly one.\n    *   Check that the last message in the list is an instance of `langgraph.schema.HumanMessage`.\n    *   Assert that the `content` of the new `HumanMessage` contains a specific, expected string confirming that the chart was generated (e.g., \"Chart has been generated and saved to disk. Please proceed to the next step.\").\n5.  **Isolation:** The test must not depend on the actual `research_agent` or any real file system operations. Any functions that write files to disk within the agent should be mocked using `unittest.mock.patch` or a similar utility to prevent side effects and keep the test focused on state transformation.",
+        "testStrategy": "1.  Navigate to the project's test directory and locate the newly created test file for the `chart_generator_agent`.\n2.  Review the test code to confirm it uses a `pytest` fixture to create a mock input state that mimics the output of the `research_agent`, including a `ToolMessage`.\n3.  Verify that the test invokes the `chart_generator_agent` asynchronously.\n4.  Check the assertions to ensure they validate:\n    a. The length of the `messages` list has incremented by one.\n    b. The new message is of type `HumanMessage`.\n    c. The content of the new message matches the expected confirmation text.\n5.  Run the entire test suite via the `pytest` command from the project root.\n6.  Confirm that the new test passes successfully and that all other existing tests continue to pass.\n7.  Ensure no actual files are created during the test run, confirming that file I/O operations are properly mocked.",
+        "status": "done",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Unit Test for Workflow Router Function",
+        "description": "Create a unit test for the router function to verify its conditional logic, ensuring the workflow correctly transitions from the research agent to the chart generator, and from the chart generator to the end state.",
+        "details": "This task involves creating a unit test for the conditional router function that directs the flow of the LangGraph application. The test will use `pytest` and its parametrization feature to efficiently test multiple logical paths.\n\n**Technical Approach:**\n1.  **Framework:** Use `pytest` for the test structure.\n2.  **Test Parametrization:** Employ the `@pytest.mark.parametrize` decorator to create two distinct test cases from a single test function. This is the best practice for testing different branches of the same conditional logic.\n    *   **Case 1:** Test the transition from `research_agent` to `chart_generator_agent`.\n    *   **Case 2:** Test the transition from `chart_generator_agent` to the `__end__` state.\n3.  **Mocking Application State:** For each test case, construct a mock `state` dictionary that mimics the application state after a specific agent has run. The `state` is the input to the router function.\n    *   For Case 1, the `messages` list in the mock state should end with a `ToolMessage`. This simulates the output of the `research_agent` after it has successfully used a tool.\n    *   For Case 2, the `messages` list should end with a `HumanMessage` that indicates the chart has been generated. This simulates the output of the `chart_generator_agent`.\n4.  **Assertions:** The test will call the `router` function with the corresponding mock state and assert that the returned string matches the expected next node in the graph. The expected values will be the string name of the next agent (`'chart_generator'`) or the official LangGraph end state identifier (`'__end__'`).",
+        "testStrategy": "1. Navigate to the project's test directory and locate the new test file for the router function.\n2. Review the test code to confirm it uses `@pytest.mark.parametrize` to test the two required conditional paths in a clean and organized manner.\n3. Verify the first parameterized test case: It should create a mock state where the last message is a `ToolMessage` and assert that the router function returns the string identifier for the `chart_generator_agent`.\n4. Verify the second parameterized test case: It should create a mock state where the last message is a `HumanMessage` (simulating the chart generator's completion message) and assert that the router function returns the graph's end state identifier, `__end__`.\n5. Execute the entire test suite using `pytest` and confirm that the new router tests pass and that no existing tests have regressed.",
+        "status": "done",
+        "dependencies": [
+          1,
+          2
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Integration Test for Full Graph Workflow",
+        "description": "Create a comprehensive integration test for the compiled LangGraph application. This test will invoke the full graph with a mocked external tool, verifying the workflow transitions correctly from research to chart generation and that the final state contains the expected sequence of messages.",
+        "details": "This task involves creating an end-to-end integration test for the compiled graph using `pytest`. The test will simulate a user request and verify that the entire chain of agents and logic executes as expected, producing a correct final state. The key is to test the integration of components, not their isolated logic, while mocking external dependencies for reliability.\n\n**Technical Approach:**\n1.  **Frameworks:** Use `pytest` and `pytest-asyncio` for the test structure and asynchronous execution. Use `pytest-mock` for mocking external services.\n2.  **Test Setup:**\n    *   Import the compiled graph object (`app`) from the main application file.\n    *   Import message types (`HumanMessage`, `AIMessage`, `ToolMessage`) from LangChain.\n3.  **Mocking Strategy:**\n    *   Within the test function, use the `mocker` fixture to patch the `TavilySearchResults.invoke` method.\n    *   Configure the mock to return a deterministic, pre-formatted string or dictionary that mimics a real API response (e.g., a JSON string with research findings). This ensures the test is repeatable and doesn't rely on a live network connection.\n4.  **Test Execution:**\n    *   Define an initial state dictionary containing a `messages` list with a single `HumanMessage` representing the user's initial query (e.g., 'Research the plot of Tesla stock price over the last year').\n    *   Invoke the graph asynchronously using `final_state = await app.ainvoke(initial_state)`.\n5.  **Assertions:**\n    *   Verify that the `final_state` is not `None`.\n    *   Check the `messages` list within the `final_state`. Assert that it contains the correct number of messages (e.g., 4 messages for a successful run).\n    *   Assert the type and content of each message in sequence:\n        a. The original `HumanMessage`.\n        b. An `AIMessage` from the research agent containing a `tool_calls` attribute.\n        c. A `ToolMessage` containing the mocked research result.\n        d. A final `HumanMessage` from the chart generator confirming chart creation.",
+        "testStrategy": "1. Navigate to the project's test directory and locate the new integration test file.\n2.  Confirm that the test imports and invokes the main compiled graph object (`app`), not individual agent functions.\n3.  Verify that the test uses a mock (e.g., `mocker.patch`) for the `TavilySearchResults` tool to ensure no external network requests are made during the test run.\n4.  Review the initial input provided to the graph; it should be a dictionary representing a valid starting state with a user query.\n5.  Examine the assertions at the end of the test. They must comprehensively check the final state's `messages` array for the correct sequence, type (`HumanMessage`, `AIMessage`, `ToolMessage`), and content of messages generated by each step of the workflow.\n6.  Execute the entire test suite via `pytest` and ensure this new integration test passes without errors.",
+        "status": "done",
+        "dependencies": [
+          1,
+          2,
+          3
+        ],
+        "priority": "medium",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-10-02T04:44:08.994Z",
+      "updated": "2025-10-02T04:50:17.689Z",
+      "description": "Tag created on 10/2/2025"
+    }
+  }
+}

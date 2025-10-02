@@ -1,0 +1,39 @@
+<context>
+# Overview  
+A simple LangGraph demo project: "Hello, multi-agent routing". This project demonstrates how to use LangGraph to build a basic graph-based workflow with multiple agents. It is intended for developers and AI enthusiasts interested in multi-agent orchestration and routing using LangGraph.
+
+# Core Features  
+- Multi-agent routing: Route messages or tasks between different agents in a graph structure.
+- Simple graph construction: Define nodes (agents) and edges (routing logic) easily.
+- Minimal working example: Focus on clarity and simplicity for educational purposes.
+
+# User Experience  
+- User persona: AI developer or ML engineer exploring agent-based workflows.
+- Key flow: User runs the demo, observes how messages are routed between agents, and can modify the graph structure.
+- UI/UX: Command-line or notebook-based, with clear output showing agent interactions and routing steps.
+</context>
+<PRD>
+# Technical Architecture  
+- Components: LangGraph core, agent node definitions, routing logic, simple CLI or notebook interface.
+- Data models: Nodes (agents), edges (routes), messages.
+- APIs: Use LangGraph's Python API for graph construction and execution.
+- Infrastructure: Local Python environment, no external dependencies beyond LangGraph and standard libraries.
+
+# Development Roadmap  
+- MVP: Build a minimal graph with two agents and a routing edge. Demonstrate message passing and routing.
+- Future: Add more agents, complex routing, and visualization.
+
+# Logical Dependency Chain
+- Set up Python environment and install LangGraph.
+- Define agent nodes and routing logic.
+- Build and run the graph to demonstrate multi-agent routing.
+- Extend with more agents or features as needed.
+
+# Risks and Mitigations  
+- Risk: LangGraph API changes or lack of documentation. Mitigation: Use latest stable version and refer to official docs.
+- Risk: Overcomplicating the demo. Mitigation: Keep the initial version minimal and focused.
+
+# Appendix  
+- Reference: https://github.com/langchain-ai/langgraph
+- Example: https://github.com/langchain-ai/langgraph/blob/main/examples/hello_world_multi_agent.py
+</PRD>
