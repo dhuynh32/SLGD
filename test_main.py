@@ -4,10 +4,10 @@ from main import research_agent, chart_generator_agent, router, GraphState
 from langchain_core.messages import HumanMessage, ToolMessage
 
 class TestResearchAgent(unittest.TestCase):
-    @patch('main.TavilySearchResults')
-    def test_research_agent_success(self, MockTavilySearchResults):
+    @patch('main.TavilySearch')
+    def test_research_agent_success(self, MockTavilySearch):
         # Arrange
-        mock_tavily = MockTavilySearchResults.return_value
+        mock_tavily = MockTavilySearch.return_value
         mock_tavily.invoke.return_value = "Mocked search results"
 
         initial_state = GraphState(messages=[HumanMessage(content="What are the latest trends in AI?")])
@@ -78,12 +78,12 @@ class TestRouter(unittest.TestCase):
         self.assertEqual(result, "end")
 
 class TestIntegration(unittest.TestCase):
-    @patch('main.TavilySearchResults')
-    def test_full_graph_workflow(self, MockTavilySearchResults):
+    @patch('main.TavilySearch')
+    def test_full_graph_workflow(self, MockTavilySearch):
         # Arrange
         from main import app 
 
-        mock_tavily = MockTavilySearchResults.return_value
+        mock_tavily = MockTavilySearch.return_value
         mock_tavily.invoke.return_value = "[{'url': 'http://test.com', 'content': 'Test content'}]"
 
         inputs = {"messages": [HumanMessage(content="What are the latest trends in AI?")]}
